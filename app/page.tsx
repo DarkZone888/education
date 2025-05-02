@@ -18,7 +18,8 @@ type Action =
   | { type: "SELECT"; index: number }
   | { type: "NEXT" }
   | { type: "PREV" }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "LOAD"; payload: { step: number; answers: number[] } };
 
 const initialState: State = {
   step: -1,
@@ -38,6 +39,11 @@ function reducer(state: State, action: Action): State {
       return { ...state, step: Math.max(state.step - 1, 0) };
     case "RESET":
       return { step: -1, answers: [] };
+    case "LOAD":
+      return {
+        step: action.payload.step,
+        answers: action.payload.answers
+      };
     default:
       return state;
   }
@@ -52,7 +58,6 @@ type Score = {
 function getResult(answers: number[]): "achiever" | "fighter" | "slacker" | "unknown" {
   const score = answers.reduce((acc, ans, i) => {
     const points = quizData[i]?.options[ans]?.points;
-
     if (points) {
       for (const key in points) {
         const typedKey = key as keyof Score;
@@ -62,14 +67,14 @@ function getResult(answers: number[]): "achiever" | "fighter" | "slacker" | "unk
     return acc;
   }, {} as Score);
 
-  return Object.keys(score).reduce(
-    (max, k) => {
-      const currentScore = score[k as keyof Score] || 0;
-      const maxScore = score[max as keyof Score] || 0;
-      return currentScore > maxScore ? k : max;
-    },
-    Object.keys(score)[0] || "unknown"
-  ) as "achiever" | "fighter" | "slacker" | "unknown";
+  const keys = Object.keys(score);
+  if (keys.length === 0) return "unknown";
+
+  return keys.reduce((max, k) => {
+    const currentScore = score[k as keyof Score] || 0;
+    const maxScore = score[max as keyof Score] || 0;
+    return currentScore > maxScore ? k : max;
+  }, keys[0]) as "achiever" | "fighter" | "slacker";
 }
 
 export default function QuizApp() {
@@ -78,6 +83,24 @@ export default function QuizApp() {
     return (typeof window !== "undefined" && localStorage.getItem("lang")) as Lang || "en";
   });
   const t = languages[lang];
+
+  useEffect(() => {
+    const savedAnswers = localStorage.getItem("quizAnswers");
+    const savedStep = localStorage.getItem("quizStep");
+    if (savedAnswers && savedStep) {
+      try {
+        dispatch({
+          type: "LOAD",
+          payload: {
+            step: parseInt(savedStep, 10),
+            answers: JSON.parse(savedAnswers)
+          }
+        });
+      } catch (e) {
+        console.error("Failed to load saved state", e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("quizAnswers", JSON.stringify(state.answers));
@@ -96,14 +119,16 @@ export default function QuizApp() {
       <div className="w-full max-w-screen-md lg:max-w-2xl xl:max-w-3xl mx-auto px-4">
         {/* Language Selector */}
         <div className="flex justify-center sm:justify-end mb-6">
-          <select
-            className="px-4 py-2 rounded-full border border-indigo-300 shadow-sm text-sm font-medium bg-white text-indigo-700 hover:bg-indigo-50 transition-all duration-200 w-full sm:w-auto"
-            value={lang}
-            onChange={(e) => setLang(e.target.value as Lang)}
-          >
-            <option value="en">🌐 English</option>
-            <option value="th">🌐 ไทย</option>
-          </select>
+          <div className="flex justify-end w-full mb-6">
+            <select
+              className="w-32 px-4 py-2 rounded-full border border-indigo-300 shadow-sm text-sm font-medium bg-white text-indigo-700 hover:bg-indigo-50 transition-all duration-200"
+              value={lang}
+              onChange={(e) => setLang(e.target.value as Lang)}
+            >
+              <option value="en">🌐 English</option>
+              <option value="th">🌐 ไทย</option>
+            </select>
+          </div>
         </div>
 
         {/* Progress Bar */}
@@ -180,9 +205,9 @@ export default function QuizApp() {
         {/* Final Results */}
         {state.step === quizData.length && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-6">
-            <p className="text-6xl">{results[resultKey]?.icon}</p>
-            <h2 className="text-xl sm:text-2xl font-bold text-indigo-800">{results[resultKey]?.title[lang]}</h2>
-            <p className="text-gray-700 max-w-2xl mx-auto text-sm sm:text-base">{results[resultKey]?.description[lang]}</p>
+            <p className="text-6xl">{results[resultKey]?.icon || "❓"}</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-indigo-800">{results[resultKey]?.title?.[lang] || "Result Unknown"}</h2>
+            <p className="text-gray-700 max-w-2xl mx-auto text-sm sm:text-base">{results[resultKey]?.description?.[lang] || "We couldn't determine your type based on the answers."}</p>
             <div className="flex justify-center">
               <button onClick={() => dispatch({ type: "RESET" })} className="mt-6 px-6 py-2 text-white bg-indigo-600 rounded flex items-center justify-center gap-2">
                 <RefreshCw className="w-4 h-4" /> {t.retake}

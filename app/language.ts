@@ -1,6 +1,6 @@
 export const languages = {
   en: {
-    startTitle: "Discover Your Tech Personality",
+    startTitle: "What kind of student are you",
     startSubtitle: "Take a quick quiz to uncover your learning style.",
     startButton: "Start Quiz",
     questionOf: (step: number, total: number) => `Question ${step} of ${total}`,
@@ -10,7 +10,7 @@ export const languages = {
     retake: "Retake Quiz"
   },
   th: {
-    startTitle: "ค้นหาบุคลิกด้านเทคโนโลยีของคุณ",
+    startTitle: "คุณเป็นนักเรียนประเภทไหน",
     startSubtitle: "ทำแบบทดสอบสั้น ๆ เพื่อค้นหาสไตล์การเรียนรู้ของคุณ",
     startButton: "เริ่มแบบทดสอบ",
     questionOf: (step: number, total: number) => `คำถาม ${step} จาก ${total}`,
