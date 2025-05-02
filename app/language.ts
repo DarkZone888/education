@@ -1,6 +1,6 @@
 export const languages = {
   en: {
-    startTitle: "Discover Your Tech Personality",
+    startTitle: "What kind of student are you",
     startSubtitle: "Take a quick quiz to uncover your learning style.",
     startButton: "Start Quiz",
     questionOf: (step: number, total: number) => `Question ${step} of ${total}`,
