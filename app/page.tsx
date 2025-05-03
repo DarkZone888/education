@@ -14,6 +14,8 @@ import quizData from "./quizData";
 import results from "./results";
 import { languages } from "./language";
 
+
+<title>What kind of student are you</title>
 type Lang = "en" | "th";
 type State = { step: number; answers: number[] };
 type Action =
