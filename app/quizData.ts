@@ -1,8 +1,8 @@
 const quizData = [
   {
     question: {
-      en: "Feeling at a disadvantage compared to other students who have access to these tools?",
-      th: "คุณรู้สึกเสียเปรียบเมื่อเทียบกับนักเรียนคนอื่นที่เข้าถึงอุปกรณ์เหล่านี้หรือไม่?"
+      en: "Do you feel at a disadvantage compared to other students who have access to these tools?",
+      th: "คุณรู้สึกเสียเปรียบเมื่อเทียบกับนักเรียนคนอื่นที่สามารถเข้าถึงอุปกรณ์เหล่านี้หรือไม่?"
     },
     options: [
       {
@@ -22,7 +22,7 @@ const quizData = [
       {
         text: {
           en: "Sometimes, but I try to overcome it.",
-          th: "บางครั้ง แต่ฉันพยายามเอาชนะมัน"
+          th: "บางครั้ง แต่นั่นไม่ใช่ปัญหาใหญ่ เพราะฉันพยายามเอาชนะมัน"
         },
         points: { fighter: 2 }
       }
@@ -30,8 +30,8 @@ const quizData = [
   },
   {
     question: {
-      en: "Can iPads, laptops, or any other modern devices be replaced by mobile phones for educational purposes?",
-      th: "อุปกรณ์ทันสมัยอย่าง iPad หรือแล็ปท็อป สามารถแทนที่โทรศัพท์มือถือในการเรียนรู้ได้หรือไม่?"
+      en: "Can iPads, laptops, or other modern devices be replaced by mobile phones for educational purposes?",
+      th: "อุปกรณ์ทันสมัย เช่น iPad หรือแล็ปท็อป สามารถถูกแทนที่ด้วยโทรศัพท์มือถือในการเรียนรู้ได้หรือไม่?"
     },
     options: [
       {
@@ -44,14 +44,14 @@ const quizData = [
       {
         text: {
           en: "No, they offer more capabilities.",
-          th: "ไม่ได้ อุปกรณ์เหล่านั้นมีความสามารถมากกว่า"
+          th: "ไม่ อุปกรณ์เหล่านั้นมีความสามารถมากกว่า"
         },
         points: { achiever: 2, fighter: 1 }
       },
       {
         text: {
-          en: "Depends on the type of work.",
-          th: "ขึ้นอยู่กับประเภทของงาน"
+          en: "It depends on the type of work.",
+          th: "ขึ้นอยู่กับประเภทของงานที่ทำ"
         },
         points: { fighter: 2, slacker: 1 }
       }
@@ -59,14 +59,14 @@ const quizData = [
   },
   {
     question: {
-      en: "What motivates you to do well in school?",
+      en: "What motivates you to perform well in school?",
       th: "อะไรเป็นแรงจูงใจให้คุณทำได้ดีในการเรียน?"
     },
     options: [
       {
         text: {
           en: "Personal growth and goals.",
-          th: "การเติบโตและเป้าหมายส่วนตัว"
+          th: "การเติบโตและบรรลุเป้าหมายส่วนตัว"
         },
         points: { achiever: 2 }
       },
@@ -89,27 +89,27 @@ const quizData = [
   {
     question: {
       en: "What style of class presentation would you give?",
-      th: "คุณจะนำเสนอหน้าชั้นเรียนในรูปแบบใด?"
+      th: "คุณจะนำเสนอในชั้นเรียนในรูปแบบใด?"
     },
     options: [
       {
         text: {
           en: "A structured and well-prepared speech.",
-          th: "สุนทรพจน์ที่มีโครงสร้างและเตรียมมาอย่างดี"
+          th: "การนำเสนอที่มีโครงสร้างและเตรียมพร้อมมาอย่างดี"
         },
         points: { achiever: 2 }
       },
       {
         text: {
           en: "Something minimal—just enough to pass.",
-          th: "แค่พอผ่าน พูดสั้น ๆ เท่าที่จำเป็น"
+          th: "การนำเสนอที่เรียบง่าย แค่พอผ่านไปได้"
         },
         points: { slacker: 2 }
       },
       {
         text: {
           en: "A passionate discussion with effort.",
-          th: "การพูดที่แสดงความพยายามและความตั้งใจ"
+          th: "การพูดคุยที่มีความตั้งใจและความพยายาม"
         },
         points: { fighter: 2 }
       }
@@ -118,27 +118,27 @@ const quizData = [
   {
     question: {
       en: "How do you usually prepare for an exam?",
-      th: "คุณเตรียมตัวสอบอย่างไร?"
+      th: "คุณเตรียมตัวสำหรับการสอบอย่างไร?"
     },
     options: [
       {
         text: {
           en: "Consistent study and planning.",
-          th: "อ่านหนังสืออย่างสม่ำเสมอและวางแผนล่วงหน้า"
+          th: "การศึกษาทบทวนอย่างสม่ำเสมอและวางแผนล่วงหน้า"
         },
         points: { achiever: 2, fighter: 1 }
       },
       {
         text: {
           en: "Cramming the night before.",
-          th: "อ่านหนังสือแบบเร่งด่วนคืนก่อนสอบ"
+          th: "อ่านหนังสือแบบเร่งด่วนในคืนก่อนสอบ"
         },
         points: { slacker: 2 }
       },
       {
         text: {
           en: "Struggling but giving my best.",
-          th: "พยายามอย่างเต็มที่แม้จะลำบาก"
+          th: "พยายามเต็มที่แม้จะลำบาก"
         },
         points: { fighter: 2 }
       }
