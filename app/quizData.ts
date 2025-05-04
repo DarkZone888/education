@@ -1,8 +1,8 @@
 const quizData = [
   {
     question: {
-      en: "Do you feel at a disadvantage compared to other students who have access to these tools?",
-      th: "คุณรู้สึกเสียเปรียบเมื่อเทียบกับนักเรียนคนอื่นที่สามารถเข้าถึงอุปกรณ์เหล่านี้หรือไม่?"
+      en: "Do you feel at a disadvantage compared to other students who have access to modern tools like ipads and laptops?",
+      th: "คุณรู้สึกเสียเปรียบเมื่อเทียบกับนักเรียนคนอื่นที่มีเครื่องมือทันสมัยอย่าง iPad และแล็ปท็อปใช้หรือไม่?"
     },
     options: [
       {
