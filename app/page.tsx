@@ -116,6 +116,21 @@ export default function QuizApp() {
     };
   }, []);
 
+  useEffect(() => {
+    if (state.step === quizData.length && resultKey !== "unknown") {
+      fetch("/api/save-result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          answers: state.answers.map((a, i) => quizData[i].options[a].text.en),
+          resultKey,
+        }),
+      });
+    }
+  }, [state.step, resultKey]);
+  
+  
+
   const handleNext = useCallback(() => {
     if (isTransitioning || state.answers[state.step] == null) return;
     setIsTransitioning(true);
