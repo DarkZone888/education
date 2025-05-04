@@ -56,17 +56,16 @@ function getResult(answers: number[]): keyof typeof results | "unknown" {
     const points = quizData[i]?.options[ans]?.points;
     if (points) {
       for (const key in points) {
-        acc[key as keyof typeof acc] =
-          (acc[key as keyof typeof acc] || 0) +
-          points[key as keyof typeof points]!;
+        const typedKey = key as keyof typeof points;
+        acc[typedKey] = (acc[typedKey] || 0) + (points[typedKey] || 0);
       }
     }
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<keyof typeof results, number>);
 
-  const keys = Object.keys(score);
+  const keys = Object.keys(score) as (keyof typeof results)[];
   if (keys.length === 0) return "unknown";
-  return keys.reduce((max, k) => (score[k] > score[max] ? k : max), keys[0]) as keyof typeof results;
+  return keys.reduce((max, k) => (score[k] > score[max] ? k : max), keys[0]);
 }
 
 const transitionDelay = 500;
@@ -76,6 +75,7 @@ export default function QuizApp() {
   const [lang, setLang] = useState<Lang>("en");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isAnswerSelected, setIsAnswerSelected] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const transitionTimeout = useRef<NodeJS.Timeout | null>(null);
   const t = languages[lang];
   const resultKey = useMemo(() => getResult(state.answers), [state.answers]);
@@ -117,19 +117,30 @@ export default function QuizApp() {
   }, []);
 
   useEffect(() => {
-    if (state.step === quizData.length && resultKey !== "unknown") {
-      fetch("/api/save-result", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          answers: state.answers.map((a, i) => quizData[i].options[a].text.en),
-          resultKey,
-        }),
-      });
-    }
-  }, [state.step, resultKey]);
-  
-  
+    const saveResult = async () => {
+      if (state.step === quizData.length && resultKey !== "unknown") {
+        try {
+          const response = await fetch("/api/save-result", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              answers: state.answers.map((a, i) => quizData[i].options[a].text.en),
+              resultKey,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to save result");
+          }
+        } catch (error) {
+          console.error("Error saving result:", error);
+          setApiError("Failed to save your result. Please try again later.");
+        }
+      }
+    };
+
+    saveResult();
+  }, [state.step, resultKey, state.answers]);
 
   const handleNext = useCallback(() => {
     if (isTransitioning || state.answers[state.step] == null) return;
@@ -170,6 +181,7 @@ export default function QuizApp() {
               className="w-32 px-3 py-2 rounded-full border border-pink-300 bg-pink-50 text-pink-600 text-sm shadow-sm backdrop-blur-sm hover:bg-pink-100 transition"
               value={lang}
               onChange={(e) => setLang(e.target.value as Lang)}
+              aria-label="Select language"
             >
               <option value="en">🌐 English</option>
               <option value="th">🌐 ไทย</option>
@@ -183,6 +195,10 @@ export default function QuizApp() {
                 className="bg-pink-500 h-full"
                 style={{ width: `${progress}%` }}
                 transition={{ duration: 0.3 }}
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                role="progressbar"
               />
             </div>
           )}
@@ -198,6 +214,7 @@ export default function QuizApp() {
                 src="/images/home.png"
                 alt="Start"
                 className="mx-auto w-56 sm:w-64 md:w-72 lg:w-80 h-auto mb-4 object-contain"
+                loading="lazy"
               />
               <h1 className="text-base sm:text-lg md:text-xl font-semibold text-pink-800 mb-2">
                 {t.startTitle}
@@ -207,7 +224,7 @@ export default function QuizApp() {
               </p>
               <button
                 onClick={handleStart}
-                className="px-5 py-2 text-sm sm:text-base bg-pink-600 text-white rounded-full flex items-center justify-center gap-2 mx-auto"
+                className="px-5 py-2 text-sm sm:text-base bg-pink-600 text-white rounded-full flex items-center justify-center gap-2 mx-auto hover:bg-pink-700 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
               >
                 <Play className="w-4 h-4" /> {t.startButton}
               </button>
@@ -236,12 +253,12 @@ export default function QuizApp() {
                       <button
                         key={i}
                         onClick={() => handleAnswerSelect(i)}
-                        role="button"
-                        aria-pressed={state.answers[state.step] === i}
+                        role="radio"
+                        aria-checked={state.answers[state.step] === i}
                         className={`flex items-center gap-3 p-3 rounded-lg transition text-left focus:outline-none focus:ring-2 focus:ring-pink-400 ${
                           state.answers[state.step] === i
                             ? "bg-pink-100 border border-pink-500"
-                            : "bg-white hover:shadow-sm"
+                            : "bg-white hover:bg-gray-50"
                         }`}
                       >
                         <div
@@ -265,14 +282,14 @@ export default function QuizApp() {
                   </div>
                   <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4">
                     <button
-                      className="w-full sm:w-auto px-4 py-2 text-gray-700 bg-gray-200 rounded"
+                      className="w-full sm:w-auto px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={state.step === 0}
                       onClick={handlePrev}
                     >
                       {t.back}
                     </button>
                     <button
-                      className="w-full sm:w-auto px-4 py-2 text-white bg-pink-600 hover:bg-pink-700 transition rounded"
+                      className="w-full sm:w-auto px-4 py-2 text-white bg-pink-600 hover:bg-pink-700 transition rounded focus:outline-none focus:ring-2 focus:ring-pink-400 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={!isAnswerSelected || isTransitioning}
                       onClick={handleNext}
                     >
@@ -297,6 +314,7 @@ export default function QuizApp() {
                 src={results[resultKey]?.image || "/images/unknown.png"}
                 alt={results[resultKey]?.title?.[lang] || "Result"}
                 className="mx-auto w-48 sm:w-56 md:w-64 lg:w-72 h-auto mb-10 object-contain"
+                loading="lazy"
               />
               <h2 className="text-base sm:text-lg md:text-xl font-semibold text-pink-800 mb-2">
                 {results[resultKey]?.title?.[lang] || "Result Unknown"}
@@ -305,9 +323,12 @@ export default function QuizApp() {
                 {results[resultKey]?.description?.[lang] ||
                   "We couldn't determine your type based on the answers."}
               </p>
+              {apiError && (
+                <p className="text-red-500 text-sm mb-4">{apiError}</p>
+              )}
               <button
                 onClick={handleReset}
-                className="px-5 py-2 text-sm sm:text-base bg-pink-600 text-white rounded-full flex items-center justify-center gap-2 mx-auto"
+                className="px-5 py-2 text-sm sm:text-base bg-pink-600 text-white rounded-full flex items-center justify-center gap-2 mx-auto hover:bg-pink-700 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
               >
                 <RefreshCw className="w-4 h-4" /> {t.retake}
               </button>
