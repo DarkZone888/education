@@ -1,117 +1,118 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
-// Reuse the Supabase client across requests
+// Configure for Vercel environment
+const supabaseOptions = {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false
+  },
+  db: {
+    schema: 'public',
+  },
+  global: {
+    headers: {
+      'Connection': 'keep-alive',
+      'X-Client-Info': 'quiz-api/vercel'
+    },
+  }
+};
+
 const supabase = globalThis.supabase || createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_ANON_KEY!,
-  {
-    db: {
-      schema: 'public',
-    },
-    global: {
-      // Recommended connection pooling settings
-      headers: {
-        'Connection': 'keep-alive',
-      },
-    },
-  }
+  supabaseOptions
 );
 
-// Store the client in globalThis for reuse in development
 if (process.env.NODE_ENV !== 'production') {
   globalThis.supabase = supabase;
 }
 
-interface QuizResult {
-  answers: string[];
-  resultKey: string;
-}
+export const config = {
+  runtime: 'nodejs', // Force Node.js runtime (not Edge)
+  api: {
+    bodyParser: {
+      sizeLimit: '1mb',
+    },
+  },
+};
 
 export async function POST(req: Request) {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Content-Type": "application/json",
   };
 
+  // Handle preflight
   if (req.method === "OPTIONS") {
     return new NextResponse(null, { headers });
   }
 
   try {
-    // Early return for missing body
-    if (!req.body) {
+    // Debugging: Log environment status
+    console.log('Supabase URL exists:', !!process.env.SUPABASE_URL);
+    
+    const bodyText = await req.text();
+    if (!bodyText) {
+      console.error('Empty request body');
       return NextResponse.json(
-        { error: "Request body is missing" },
+        { error: "Request body is empty" },
         { status: 400, headers }
       );
     }
 
-    // Measure performance
-    const startTime = Date.now();
-    let parseTime, dbTime;
+    const requestData = JSON.parse(bodyText);
+    console.log('Received data:', requestData);
 
-    // Parse with timeout check
-    const parseStart = Date.now();
-    const requestData = await req.json().catch(() => null);
-    parseTime = Date.now() - parseStart;
+    const { answers, resultKey } = requestData;
 
-    if (!requestData) {
-      return NextResponse.json(
-        { error: "Invalid JSON format" },
-        { status: 400, headers }
-      );
-    }
-
-    const { answers, resultKey } = requestData as QuizResult;
-
-    // Basic validation without blocking
+    // Basic validation
     if (!Array.isArray(answers) || !resultKey) {
+      console.error('Validation failed:', { answers, resultKey });
       return NextResponse.json(
-        { error: "Invalid input format" },
+        { error: "Invalid data format" },
         { status: 400, headers }
       );
     }
-
-    // Minimal data processing
-    const payload = {
-      answers: answers.slice(0, 1000), // Limit to 1000 answers
-      result_key: String(resultKey).slice(0, 255), // Limit key length
-      created_at: new Date().toISOString()
-    };
 
     // Database operation with timeout
-    const dbStart = Date.now();
-    const { error } = await supabase
+    const dbResponse = await supabase
       .from("quiz_results")
-      .insert([payload])
+      .insert([{
+        answers: answers.slice(0, 500), // Safety limit
+        result_key: resultKey.slice(0, 255),
+        created_at: new Date().toISOString()
+      }])
       .select()
-      .single();
+      .single()
+      .timeout(5000); // 5 second timeout
 
-    dbTime = Date.now() - dbStart;
-
-    if (error) {
-      console.error(`DB Error in ${dbTime}ms:`, error);
+    if (dbResponse.error) {
+      console.error('Supabase error:', dbResponse.error);
       return NextResponse.json(
-        { error: "Database operation failed", details: error.message },
-        { status: 502, headers } // 502 Bad Gateway for DB failures
+        { 
+          error: "Database operation failed",
+          details: dbResponse.error.message 
+        },
+        { status: 502, headers }
       );
     }
 
-    const totalTime = Date.now() - startTime;
-    console.log(`Request processed in ${totalTime}ms (parse: ${parseTime}ms, db: ${dbTime}ms)`);
-
+    console.log('Successfully stored:', dbResponse.data);
     return NextResponse.json(
-      { success: true, performance: { totalTime, parseTime, dbTime } },
+      { success: true, data: dbResponse.data },
       { status: 200, headers }
     );
 
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error('API Error:', error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500, headers }
     );
   }
