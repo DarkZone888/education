@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-export const dynamic = 'force-dynamic'
 
 interface ResultRow {
   id: string
