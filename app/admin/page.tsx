@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 interface ResultRow {
   id: string
   created_at: string
-  answers: any[]
+  answers: unknown[]
   result_key: string
 }
 
